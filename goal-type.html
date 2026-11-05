@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Create a Goal · Type</title>
+<link rel="stylesheet" href="tokens.css">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="goal.css">
+</head>
+<body>
+<div class="phone">
+  <form class="sheet choose" onsubmit="return false">
+    <a class="back" href="dashboard.html" aria-label="Back"><svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M8 2 2 8l6 6"/></svg></a>
+    <h1>What type of Goal are you creating?</h1>
+    <p class="sub">Choose the activity</p>
+    <div class="options" role="radiogroup" aria-label="Activity">
+      <label class="opt"><input type="radio" name="activity" value="any"><span>Any</span></label>
+      <label class="opt"><input type="radio" name="activity" value="walking"><span>Walking</span></label>
+      <label class="opt"><input type="radio" name="activity" value="running"><span>Running</span></label>
+      <label class="opt"><input type="radio" name="activity" value="cycling"><span>Cycling</span></label>
+      <label class="opt"><input type="radio" name="activity" value="steps"><span>Steps</span></label>
+      <label class="opt"><input type="radio" name="activity" value="stairs"><span>Stairs</span></label>
+    </div>
+    <a class="cta" href="goal-measure.html">Continue</a>
+  </form>
+</div>
+</body>
+</html>

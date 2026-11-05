@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Current App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap">
+<style>
+  /* The app as it actually looked, rebuilt in HTML from screenshots.
+     Deliberately no shared tokens or dark mode: hard-coded values, one red, light only. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { color-scheme: light; }
+  body {
+    font: 14px/1.35 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    color: #111;
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  main { min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 28px; }
+  main[hidden] { display: none; }
+
+  .cond { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; }
+  .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; color: #E2001A; }
+  .headline { font: 800 34px/1 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; margin-top: 4px; }
+  .section-title { font: 700 19px/1 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; padding: 0 18px; margin-top: 24px; }
+  .circle-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.14);
+    position: relative;
+  }
+  .badge {
+    position: absolute; top: 2px; right: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #E2001A; color: #fff; font-size: 10px; font-weight: 700;
+    display: grid; place-items: center;
+  }
+
+  /* Dashboard */
+  .dash-top { padding: 16px 18px 0; }
+  .tabs { display: flex; gap: 22px; margin-top: 22px; padding: 0 18px; border-bottom: 1px solid #DDD; }
+  .tabs span { font-size: 11px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; padding-bottom: 7px; color: #555; }
+  .tabs span:first-child { color: #111; border-bottom: 2px solid #E2001A; }
+  .summary { padding: 22px 18px 0; }
+  .week { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; padding: 0 18px; margin-top: 18px; font-size: 13px; text-align: center; }
+  .panel { background: #EFEFEF; margin: 14px 9px 0; }
+  .goal-panel { padding: 18px 26px 24px; }
+  .goal-panel .eyebrow { text-align: center; }
+  .goal-row { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+  .goal-row b { display: block; font: 700 36px/1 "Barlow Condensed", sans-serif; }
+  .goal-row small { font-size: 12px; color: #444; }
+  .row-link { display: flex; justify-content: space-between; align-items: center; padding: 18px; font-size: 15px; border-bottom: 1px solid #E6E6E6; }
+  .row-link svg { color: #888; }
+
+  .mileage { position: relative; height: 128px; margin-top: 14px; }
+  .axis-label { position: absolute; left: 10px; font-size: 10px; color: #333; }
+  .dash { position: absolute; left: 48px; right: 10px; border-top: 1px dashed #BBB; }
+  .day-row { position: absolute; left: 70px; right: 40px; bottom: 10px; display: flex; justify-content: space-between; font-size: 11px; color: #444; }
+  .day-row b { color: #111; }
+  .mile-bar { position: absolute; left: calc(70px + (100% - 110px) * 2 / 6 - 3px); top: 22px; bottom: 34px; width: 6px; background: #E2001A; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; row-gap: 18px; padding: 18px 18px 0; }
+  .stats b { display: block; font: 700 40px/1 "Barlow Condensed", sans-serif; }
+  .stats small { display: block; font-size: 12px; color: #555; margin-top: 4px; }
+
+  .hr-panel { position: relative; height: 226px; }
+  .hr-panel .dash { left: 10px; }
+  .hr-panel .axis-label { background: #EFEFEF; padding-right: 4px; }
+  .hr-bar { position: absolute; left: calc(70px + (100% - 110px) * 2 / 6 - 20px); width: 40px; bottom: 98px; display: flex; flex-direction: column; }
+  .hr-bar i { display: block; }
+  .hr-panel .day-row { bottom: 74px; }
+  .legend { position: absolute; left: 10px; right: 10px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 11px; color: #333; }
+  .legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 4px; background: var(--c); }
+
+
+  /* Goal screens */
+  .nav { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; padding: 16px 16px 0; }
+  .nav h1 { font-size: 15px; font-weight: 700; text-align: center; }
+  .pill { justify-self: end; font-size: 11px; font-weight: 700; padding: 8px 12px; border-radius: 16px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.14); }
+  .page { padding: 22px 18px 0; }
+  .recs { margin-top: 18px; display: grid; gap: 16px; }
+  .recs b { display: block; font-size: 13px; }
+  .recs p { font-size: 12px; color: #444; margin-top: 2px; }
+  .block-btn {
+    margin: auto 18px 0; height: 50px;
+    display: grid; place-items: center;
+    background: #000; color: #fff;
+    font: 700 21px/1 "Barlow Condensed", sans-serif; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .form-rows { margin-top: 14px; }
+  .form-rows div { display: flex; justify-content: space-between; align-items: center; height: 55px; font-size: 15px; }
+  .form-rows span { color: #555; display: flex; align-items: center; gap: 8px; }
+  .summary-line { font-size: 14px; font-weight: 700; margin-top: 18px; }
+  .goal-item { margin-top: 22px; }
+  .goal-item header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+  .goal-item b { display: block; font: 700 36px/1.1 "Barlow Condensed", sans-serif; margin-top: 6px; }
+  .bar { height: 15px; background: #E3E3E3; margin-top: 8px; }
+  .bar i { display: block; height: 100%; width: var(--p); background: #0B4EA2; }
+  .goal-item small { display: block; font-size: 10px; color: #777; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Dashboard (paid, active) -->
+<main data-screen="dashboard" hidden>
+  <div class="dash-top">
+    <span class="circle-btn" aria-label="Notifications, 1 new">
+      <svg width="20" height="22" viewBox="0 0 20 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2a6 6 0 0 0-6 6v5l-2 3h16l-2-3V8a6 6 0 0 0-6-6z"/><path d="M7.5 19a2.5 2.5 0 0 0 5 0"/></svg>
+      <span class="badge">1</span>
+    </span>
+  </div>
+  <nav class="tabs"><span>Dashboard</span><span>My Plan</span><span>Workouts</span></nav>
+
+  <div class="summary">
+    <div class="eyebrow">Summary</div>
+    <div class="headline">Weekly Performance</div>
+  </div>
+  <div class="week">
+    <svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1 1.5 7 7 13"/></svg>
+    <span>This Week</span><span></span>
+  </div>
+
+  <div class="panel goal-panel">
+    <div class="eyebrow">Work out 5 times per week</div>
+    <div class="goal-row">
+      <div><b>1</b><small>of 5 Workouts</small></div>
+      <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#DCDCDC" stroke-width="12"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#0B4EA2" stroke-width="12" stroke-dasharray="50.27 251.33" transform="rotate(-90 50 50)"/>
+      </svg>
+    </div>
+  </div>
+  <a class="row-link" href="?screen=weekly-goals">Manage Goals<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m1.5 1 5 5.5-5 5.5"/></svg></a>
+
+  <h2 class="section-title">Weekly Mileage</h2>
+  <div class="panel mileage">
+    <span class="axis-label" style="top: 14px">4.53 mi</span>
+    <span class="dash" style="top: 22px"></span>
+    <span class="mile-bar"></span>
+    <div class="day-row"><span>S</span><span>M</span><b>T</b><span>W</span><span>Th</span><span>F</span><span>S</span></div>
+  </div>
+  <div class="stats">
+    <div><b>4.53</b><small>Distance<br>(mi)</small></div>
+    <div><b>1:42</b><small>Duration<br>(hr:min)</small></div>
+    <div><b>1403</b><small>Calories</small></div>
+  </div>
+
+  <h2 class="section-title">Weekly Heart Rate Distribution</h2>
+  <div class="week">
+    <svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1 1.5 7 7 13"/></svg>
+    <span>This Week</span><span></span>
+  </div>
+  <div class="panel hr-panel">
+    <span class="dash" style="top: 20px"></span><span class="axis-label" style="top: 13px">111 min</span>
+    <span class="dash" style="top: 56px"></span><span class="axis-label" style="top: 49px">74</span>
+    <span class="dash" style="top: 92px"></span><span class="axis-label" style="top: 85px">37</span>
+    <span class="dash" style="top: 128px"></span><span class="axis-label" style="top: 121px">0</span>
+    <div class="hr-bar" style="top: 44px">
+      <i style="height: 32px; background: #F2797E"></i>
+      <i style="height: 26px; background: #F6A9AC"></i>
+      <i style="height: 26px; background: #FBDADC"></i>
+    </div>
+    <div class="day-row"><span>S</span><span>M</span><b>T</b><span>W</span><span>Th</span><span>F</span><span>S</span></div>
+    <div class="legend">
+      <span style="--c: #FBE3E4">1 Active Recovery</span>
+      <span style="--c: #F6A9AC">2 Endurance</span>
+      <span style="--c: #F2797E">3 Tempo</span>
+      <span style="--c: #E8333C">4 Race Pace</span>
+      <span style="--c: #D3000F">5 High Intensity</span>
+    </div>
+  </div>
+  <div class="stats">
+    <div><b>1:41</b><small>Duration<br>(hr:min)</small></div>
+    <div><b>100%</b><small>Easy<br>(Zones 1-3)</small></div>
+    <div><b>-</b><small>Hard<br>(Zones 4-5)</small></div>
+  </div>
+  <a class="row-link" href="#" style="margin-top: 14px; border-bottom: 0">Calibrate Heart Rate Zones<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m1.5 1 5 5.5-5 5.5"/></svg></a>
+
+</main>
+
+<!-- Goals intro -->
+<main data-screen="goals-intro" hidden>
+  <div class="nav">
+    <a class="circle-btn" href="?screen=weekly-goals" aria-label="Back"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1 1.5 7 7 13"/></svg></a>
+    <h1>Goals</h1><span></span>
+  </div>
+  <div class="page">
+    <div class="headline">Set goals. Exceed them.</div>
+    <div class="eyebrow" style="margin-top: 26px">Recommended goals</div>
+    <div class="recs">
+      <div><b>Set a baseline.</b><p>Get started by walking 1 hour per week to establish a healthy lifestyle.</p></div>
+      <div><b>Take it up a notch.</b><p>Add to your current training distance to move up to the next level.</p></div>
+      <div><b>Kick it into high gear.</b><p>Add one or two extra workouts per week to break through a plateau.</p></div>
+    </div>
+  </div>
+  <a class="block-btn" href="?screen=create-goal">Create Goal</a>
+</main>
+
+<!-- Create goal -->
+<main data-screen="create-goal" hidden>
+  <div class="nav">
+    <a class="circle-btn" href="?screen=goals-intro" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="2"><path d="M1 1l12 12M13 1 1 13"/></svg></a>
+    <h1>Create Goal</h1><span></span>
+  </div>
+  <div class="page">
+    <div class="eyebrow">Choose your goal</div>
+    <div class="form-rows">
+      <div>Activity<span>Any<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m1.5 1 5 5.5-5 5.5"/></svg></span></div>
+      <div>Type<span>Number of Workouts<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m1.5 1 5 5.5-5 5.5"/></svg></span></div>
+      <div>Target<span>1</span></div>
+      <div>Start<span>This Week<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m1.5 1 5 5.5-5 5.5"/></svg></span></div>
+    </div>
+    <p class="summary-line">Work out 1 time per week starting 7/26</p>
+  </div>
+  <a class="block-btn" href="?screen=weekly-goals">Start Goal</a>
+</main>
+
+<!-- This week's goals -->
+<main data-screen="weekly-goals" hidden>
+  <div class="nav">
+    <a class="circle-btn" href="?screen=dashboard" aria-label="Back"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1 1.5 7 7 13"/></svg></a>
+    <h1>Goals</h1>
+    <a class="pill" href="?screen=goals-intro">Create</a>
+  </div>
+  <div class="page">
+    <div class="eyebrow">5 days left</div>
+    <div class="headline">This week's goals</div>
+    <div class="goal-item">
+      <header>Work out 5 times<svg width="16" height="16" viewBox="0 0 24 24" fill="#222"><path d="m12 2 3 6.6 7.2.7-5.4 4.9 1.6 7.1L12 17.6 5.6 21.3l1.6-7.1L1.8 9.3 9 8.6z"/></svg></header>
+      <b>1/5</b><div class="bar" style="--p: 20%"><i></i></div><small>Week 313</small>
+    </div>
+    <div class="goal-item">
+      <header>Work out 3:00 (hr:min)<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"><path d="m12 2 3 6.6 7.2.7-5.4 4.9 1.6 7.1L12 17.6 5.6 21.3l1.6-7.1L1.8 9.3 9 8.6z"/></svg></header>
+      <b>1:42/3:00</b><div class="bar" style="--p: 57%"><i></i></div><small>Week 215</small>
+    </div>
+    <div class="goal-item">
+      <header>Run 5.00 miles<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"><path d="m12 2 3 6.6 7.2.7-5.4 4.9 1.6 7.1L12 17.6 5.6 21.3l1.6-7.1L1.8 9.3 9 8.6z"/></svg></header>
+      <b>0.00/5.00</b><div class="bar" style="--p: 0%"><i></i></div><small>Week 88</small>
+    </div>
+  </div>
+</main>
+
+<script>
+  (() => {
+    // Show one screen; anything not listed falls back to the dashboard
+    const SCREENS = new Set(['dashboard', 'goals-intro', 'create-goal', 'weekly-goals']);
+    const asked = new URLSearchParams(location.search).get('screen');
+    const screen = SCREENS.has(asked) ? asked : 'dashboard';
+    document.querySelector(`main[data-screen="${screen}"]`).hidden = false;
+  })();
+</script>
+</body>
+</html>

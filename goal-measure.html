@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Create a Goal · Measure</title>
+<link rel="stylesheet" href="tokens.css">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="goal.css">
+</head>
+<body>
+<div class="phone">
+  <form class="sheet choose" onsubmit="return false">
+    <a class="back" href="goal-type.html" aria-label="Back"><svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M8 2 2 8l6 6"/></svg></a>
+    <h1>What would you like to measure?</h1>
+    <p class="sub">What do you want to track</p>
+    <div class="options" role="radiogroup" aria-label="Measure">
+      <label class="opt"><input type="radio" name="measure" value="distance"><span>Distance</span></label>
+      <label class="opt"><input type="radio" name="measure" value="duration"><span>Duration</span></label>
+      <label class="opt"><input type="radio" name="measure" value="calories"><span>Calories</span></label>
+    </div>
+    <a class="cta" href="goal-steps.html">Continue</a>
+  </form>
+</div>
+</body>
+</html>

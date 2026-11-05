@@ -1,0 +1,214 @@
+/* Tokens from Figma "Map My Dash" (node 351:748) */
+:root {
+  color-scheme: light dark;
+
+  /* Primals */
+  --n-0: #FFFFFF;
+  --n-50: #FAFAFA;
+  --n-100: #F5F5F5;
+  --n-200: #E8E8E8;
+  --n-300: #D6D6D6;
+  --n-400: #B0B0B0;
+  --n-500: #8A8A8A;
+  --n-600: #6B6B6B;
+  --n-700: #4A4A4A;
+  --n-800: #2E2E2E;
+  --n-900: #1A1A1A;
+  --n-1000: #000000;
+  --r-500: #F22613;
+  --o-500: #FF9200;
+  --g-500: #16D374;
+
+  /* Flavor accent (Figma "Themes"); red is the default, others set by data-flavor below */
+  --accent: #DC0019;
+  --accent-foreground: var(--n-0);
+
+  /* Semantic: light */
+  --background: var(--n-100);
+  --foreground: var(--n-900);
+  --card: var(--n-0);
+  --card-foreground: var(--n-900);
+  --primary: var(--n-1000);
+  --primary-foreground: var(--n-0);
+  --secondary: var(--n-200);
+  --secondary-foreground: var(--n-700);
+  --muted: var(--n-400);
+  --muted-foreground: var(--n-700);
+  --alert: var(--r-500);
+  --alert-foreground: var(--n-0);
+  --success: var(--g-500);
+  --success-foreground: var(--n-1000);
+  --warning: var(--o-500);
+  --warning-foreground: var(--n-1000);
+  --popover: var(--n-0);
+  --popover-foreground: var(--n-1000);
+  --border: var(--n-200);
+
+  /* Chart-2..5 aren't resolvable in the Figma sheet; tints of the accent stand in */
+  --chart-1: var(--accent);
+  --chart-2: color-mix(in srgb, var(--accent) 82%, var(--n-0));
+  --chart-3: color-mix(in srgb, var(--accent) 64%, var(--n-0));
+  --chart-4: color-mix(in srgb, var(--accent) 46%, var(--n-0));
+  --chart-5: color-mix(in srgb, var(--accent) 25%, var(--n-0));
+
+  --radius: 12px;
+
+  /* Type scale (size / line height) */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --type-3xl: 28px/36px var(--font);
+  --type-2xl: 24px/32px var(--font);
+  --type-xl: 20px/28px var(--font);
+  --type-lg: 18px/26px var(--font);
+  --type-base: 16px/24px var(--font);
+  --type-sm: 14px/20px var(--font);
+  --type-xs: 12px/18px var(--font);
+  --type-2xs: 10px/16px var(--font);
+}
+
+/* Semantic: dark. Follows the system unless data-scheme forces light or dark;
+   the forced-dark block repeats the same values. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-scheme="light"]) {
+    --background: var(--n-1000);
+    --foreground: var(--n-50);
+    --card: var(--n-900);
+    --card-foreground: var(--n-100);
+    --primary: var(--n-0);
+    --primary-foreground: var(--n-1000);
+    --secondary: var(--n-800);
+    --secondary-foreground: var(--n-300);
+    --muted: var(--n-700);
+    --muted-foreground: var(--n-400);
+    --popover: var(--n-800);
+    --popover-foreground: var(--n-200);
+    --border: var(--n-800);
+  }
+}
+:root[data-scheme="dark"] {
+  color-scheme: dark;
+  --background: var(--n-1000);
+  --foreground: var(--n-50);
+  --card: var(--n-900);
+  --card-foreground: var(--n-100);
+  --primary: var(--n-0);
+  --primary-foreground: var(--n-1000);
+  --secondary: var(--n-800);
+  --secondary-foreground: var(--n-300);
+  --muted: var(--n-700);
+  --muted-foreground: var(--n-400);
+  --popover: var(--n-800);
+  --popover-foreground: var(--n-200);
+  --border: var(--n-800);
+}
+:root[data-scheme="light"] { color-scheme: light; }
+
+/* Variant: Map My Fonts. Barlow Condensed at the original app's weights:
+   ExtraBold headline, Bold titles and numbers */
+:root[data-theme="mapmy"] {
+  --font-title: "Barlow Condensed", var(--font);
+  --weight-heading: 800;
+  --weight-title: 700;
+  --tracking-title: 0;
+  --font-number: "Barlow Condensed", var(--font);
+  --weight-number: 700;
+  --tracking-number: 0;
+}
+
+/* Variant: Modern Health. Modeled on apple.com/health at phone width: one family, one weight (600),
+   14px copy, near-black labels with grey kept for units and metadata, no borders or shadows,
+   a blurred sticky header, and light-to-accent gradient fills.
+   Apple neutrals aren't in the Map My primal set, so they're raw values here. */
+:root[data-theme="health"] {
+  --type-3xl: 28px/32px var(--font);
+  --type-2xl: 24px/28px var(--font);
+  --type-xl: 17px/21px var(--font);
+  --type-lg: 17px/21px var(--font);
+  --type-base: 17px/21px var(--font);
+  --type-sm: 14px/18px var(--font);
+  --type-xs: 12px/16px var(--font);
+  --type-2xs: 12px/16px var(--font);
+  --type-unit: 14px/18px var(--font);
+  --weight-heading: 600;
+  --weight-title: 600;
+  --weight-number: 600;
+  --weight-label: 600;
+  --tracking-number: 0;
+  --tracking-text: -.016em;
+  --unit-case: none;
+  --unit-weight: 600;
+  --unit-color: var(--muted-foreground);
+  --label-color: var(--card-foreground);
+
+  --divider: transparent;
+  --control-bg: var(--secondary);
+  --nav-btn-bg: var(--secondary);
+  --chevron-cap: round;
+  --chevron-join: round;
+  --control-shadow: none;
+  --header-bg: rgba(255, 255, 255, .72);
+  --header-blur: saturate(180%) blur(20px);
+  --segment-active: #FFFFFF;
+  --option-bg: var(--background);
+  --option-border: transparent;
+  --card-fill: linear-gradient(var(--card) 55%, color-mix(in srgb, var(--accent) 5%, var(--card)));
+  --fill-chart: linear-gradient(135deg, color-mix(in srgb, var(--accent) 65%, var(--n-0)), var(--accent));
+  --fill-progress: linear-gradient(90deg, color-mix(in srgb, var(--accent) 65%, var(--n-0)), var(--accent));
+  --hr-line-low: color-mix(in srgb, var(--accent) 45%, var(--card));
+
+  --background: #F5F5F7;
+  --foreground: #1D1D1F;
+  --card: #FFFFFF;
+  --card-foreground: #1D1D1F;
+  --primary: #1D1D1F;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E8E8ED;
+  --muted: #86868B;
+  --muted-foreground: #6E6E73;
+  --border: #D2D2D7;
+
+  --radius: 28px;
+  --card-pad: 16px;
+  --sec-join: 0px;
+  --sec-join-above: 6px;
+  --bar-radius: 999px;
+  --weight-days: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="health"]:not([data-scheme="light"]) {
+    --background: #000000;
+    --foreground: #F5F5F7;
+    --card: #1C1C1E;
+    --card-foreground: #F5F5F7;
+    --primary: #F5F5F7;
+    --primary-foreground: #1D1D1F;
+    --secondary: #2C2C2E;
+    --muted: #6E6E73;
+    --muted-foreground: #A1A1A6;
+    --border: #424245;
+    --header-bg: rgba(28, 28, 30, .72);
+    --segment-active: #636366;
+  }
+}
+:root[data-theme="health"][data-scheme="dark"] {
+  --background: #000000;
+  --foreground: #F5F5F7;
+  --card: #1C1C1E;
+  --card-foreground: #F5F5F7;
+  --primary: #F5F5F7;
+  --primary-foreground: #1D1D1F;
+  --secondary: #2C2C2E;
+  --muted: #6E6E73;
+  --muted-foreground: #A1A1A6;
+  --border: #424245;
+  --header-bg: rgba(28, 28, 30, .72);
+  --segment-active: #636366;
+}
+
+/* Map My flavors (Figma "Themes"). Accent-foreground is n-0 for all of them. */
+:root[data-flavor="run"] { --accent: #019DEA; }
+:root[data-flavor="fitness"] { --accent: #0D4C8B; }
+:root[data-flavor="ride"] { --accent: #FF1700; }
+:root[data-flavor="walk"] { --accent: #C314B6; }
+:root[data-flavor="mvp"] { --accent: #FF5900; }
+:root[data-flavor="red"] { --accent: #DC0019; }

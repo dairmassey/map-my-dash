@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Performance</title>
+<link rel="stylesheet" href="tokens.css">
+<script src="theme.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font: var(--type-base);
+    color: var(--foreground);
+    background: var(--n-800);
+    -webkit-font-smoothing: antialiased;
+  }
+  .phone {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--background);
+  }
+
+  /* Header */
+  .top {
+    background: var(--card);
+    padding: 16px 16px 0;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .top-row { display: flex; justify-content: space-between; align-items: center; }
+  .icon-btn, .pill-btn {
+    border: 0;
+    background: var(--card);
+    box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    color: var(--foreground);
+    font: inherit;
+    cursor: pointer;
+  }
+  .icon-btn { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; }
+  .pill-btn { height: 48px; padding: 0 16px; border-radius: 24px; font: 500 var(--type-base); display: inline-flex; align-items: center; text-decoration: none; }
+  .tabs { display: flex; gap: 24px; margin-top: 22px; }
+  .tab {
+    font: 700 var(--type-xs);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    padding-bottom: 9px;
+    border-bottom: 3px solid transparent;
+    text-decoration: none;
+  }
+  .tab.active { color: var(--foreground); border-color: var(--accent); }
+
+  /* Page title */
+  /* Base (Figma): centered title, arrows either side of "This week" */
+  .hero {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    row-gap: 6px;
+    padding: 20px 16px 16px;
+    text-align: center;
+  }
+  .hero-text, .title-row, .week { display: contents; }
+  .hero h1 { grid-column: 1 / -1; font: 700 var(--type-3xl); letter-spacing: -.01em; }
+  .week-label { grid-row: 2; grid-column: 2; font: var(--type-lg); color: var(--muted-foreground); }
+  .week button:first-child { grid-row: 2; grid-column: 1; }
+  .week button:last-child { grid-row: 2; grid-column: 3; }
+  .week svg { stroke-linecap: var(--chevron-cap, butt); stroke-linejoin: var(--chevron-join, miter); }
+  .figure { display: none; }
+
+  /* Modern Health: left-aligned title with the flavor's figure inline, arrows on the right */
+  :root[data-theme="health"] .hero { display: flex; align-items: center; gap: 12px; padding: 28px 16px 20px; text-align: left; }
+  :root[data-theme="health"] .week-label { display: block; margin-top: 4px; }
+  :root[data-theme="health"] .hero-text { display: block; flex: 1; min-width: 0; }
+  :root[data-theme="health"] .title-row { display: flex; align-items: center; gap: 8px; }
+  :root[data-theme="health"] .week { display: flex; gap: 8px; }
+  :root[data-theme="health"] .week button:disabled { opacity: .3; cursor: default; }
+
+  /* First goal follows the flavor's primary activity; red keeps the Figma "Ride Goal" */
+  .goal-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+  .goal-name { display: none; }
+  .goal-name.ride { display: inline; }
+  :root:is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="walk"], [data-flavor="fitness"]) .goal-name.ride { display: none; }
+  :root:is([data-flavor="run"], [data-flavor="mvp"]) .goal-name.run { display: inline; }
+  :root[data-flavor="walk"] .goal-name.walk { display: inline; }
+  :root[data-flavor="fitness"] .goal-name.distance { display: inline; }
+
+  /* Modern Health: the flavor's figures (runner covers flavors without their own).
+     The moving figure in Create a Goal is a luminance mask of the white-on-black file, so it's smooth,
+     boxless and takes the button's text color. */
+  .figure {
+    height: 24px;
+    aspect-ratio: var(--ar);
+    background: currentColor;
+    mask: var(--src) center / contain no-repeat;
+    mask-mode: luminance;
+  }
+  .figure.run { --ar: 85 / 97; --src: url(assets/figures/run.dark.svg); }
+  .figure.cycle { --ar: 91 / 78; --src: url(assets/figures/cycle.dark.svg); }
+  .figure.walk { --ar: 54 / 98; --src: url(assets/figures/walk.dark.svg); }
+
+  /* The exceeded goal gets the celebration figure. It keeps its colored confetti, so it's an image:
+     multiply drops the white backdrop in light, screen drops the black one in dark. */
+  .celebrate { display: none; height: 44px; }
+  .celebrate img { display: block; height: 100%; width: auto; }
+  .celebrate .on-light { mix-blend-mode: multiply; }
+  .celebrate .on-dark { display: none; mix-blend-mode: screen; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-scheme="light"]) .celebrate .on-light { display: none; }
+    :root:not([data-scheme="light"]) .celebrate .on-dark { display: block; }
+  }
+  :root[data-scheme="dark"] .celebrate .on-light { display: none; }
+  :root[data-scheme="dark"] .celebrate .on-dark { display: block; }
+
+  :root[data-theme="health"] .pill-btn .plus { display: none; }
+  :root[data-theme="health"] .pill-btn .figure.cycle { display: block; }
+  :root[data-theme="health"]:is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"], [data-flavor="walk"]) .pill-btn .figure.cycle { display: none; }
+  :root[data-theme="health"]:is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"]) .pill-btn .figure.run { display: block; }
+  :root[data-theme="health"][data-flavor="walk"] .pill-btn .figure.walk { display: block; }
+  /* One celebration per flavor, with confetti recolored to that flavor's accent; red is the default */
+  :root[data-theme="health"]:not([data-flavor]) .celebrate.f-red,
+  :root[data-theme="health"][data-flavor="red"] .celebrate.f-red,
+  :root[data-theme="health"][data-flavor="run"] .celebrate.f-run,
+  :root[data-theme="health"][data-flavor="fitness"] .celebrate.f-fitness,
+  :root[data-theme="health"][data-flavor="mvp"] .celebrate.f-mvp,
+  :root[data-theme="health"][data-flavor="ride"] .celebrate.f-ride,
+  :root[data-theme="health"][data-flavor="walk"] .celebrate.f-walk { display: block; }
+
+  /* Exceeded goal: the full bar gets a moving sheen (Modern Health only; off with reduced motion) */
+  .track.done i { position: relative; overflow: hidden; }
+  :root[data-theme="health"] .track.done i::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .6) 50%, transparent 80%);
+    transform: translateX(-100%);
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-theme="health"] .track.done i::after { display: none; }
+  }
+
+  .week button {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    background: var(--nav-btn-bg, none);
+    color: var(--foreground);
+  }
+
+  /* Cards */
+  .cards { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: var(--card); color: var(--card-foreground); border-radius: var(--radius); overflow: hidden; }
+  .sec { padding: var(--card-pad, 14px) var(--card-pad, 16px); }
+  .sec + .sec { border-top: 1px solid var(--border); }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .card-title { font: 600 var(--type-xl); letter-spacing: -.01em; }
+  .stamp { font: var(--type-xs); color: var(--muted-foreground); }
+
+  .split { display: flex; justify-content: space-between; align-items: stretch; gap: 12px; margin-top: 6px; }
+  /* Today sits at the top of the bars and Daily Avg. at their base, so the stats fill the card */
+  .stats { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; padding: 2px 0 20px; }
+  .label { font: var(--type-sm); color: var(--muted-foreground); }
+  .value { font: 500 var(--type-3xl); letter-spacing: -.02em; }
+  .value small { font: 500 var(--type-base); text-transform: var(--unit-case, uppercase); color: var(--unit-color, inherit); letter-spacing: 0; }
+
+  /* Weekly bar chart */
+  .bars { display: grid; grid-template-columns: repeat(7, 30px); column-gap: 4px; }
+  .bar {
+    height: 112px;
+    background: var(--secondary);
+    border-radius: calc(var(--radius) / 2);
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+  .bar i { display: block; width: 100%; height: var(--h, 0%); background: var(--chart-1); border-radius: calc(var(--radius) / 2); }
+  .days { display: grid; grid-template-columns: repeat(7, 30px); column-gap: 4px; margin-top: 4px; }
+  .days span { font: var(--type-2xs); font-weight: var(--weight-days, 400); color: var(--muted-foreground); text-align: center; }
+
+  /* Workout day blocks */
+  .blocks .bar { height: 38px; }
+  .blocks .bar.on { background: var(--chart-1); color: var(--accent-foreground); font: 600 var(--type-xs); justify-content: center; align-items: center; }
+
+  /* Goal progress */
+  .progress { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .track { flex: 1; height: 10px; background: var(--secondary); border-radius: 5px; overflow: hidden; }
+  .track i { display: block; height: 100%; width: var(--p); background: var(--accent); border-radius: 5px; }
+  .progress span { font: var(--type-sm); color: var(--muted-foreground); min-width: 38px; text-align: right; }
+
+  /* Heart rate distribution */
+  .hr-chart { position: relative; margin-top: 16px; padding-right: 40px; }
+  .hr-grid { position: absolute; inset: 0 0 18px 0; display: flex; flex-direction: column; justify-content: space-between; }
+  .hr-grid div { border-top: 1px solid var(--border); position: relative; }
+  .hr-grid div span { position: absolute; right: 0; top: -9px; font: var(--type-xs); color: var(--muted-foreground); background: var(--card); padding-left: 6px; }
+  .hr-cols { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); height: 100px; align-items: end; }
+  .hr-col { justify-self: center; width: 30px; display: flex; flex-direction: column; border-radius: 3px 3px 0 0; overflow: hidden; }
+  .hr-col i { display: block; }
+  .hr-days { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 4px; }
+  .hr-days span { font: var(--type-xs); color: var(--muted-foreground); text-align: center; }
+
+  /* Modern Health heart rate: workout line with a value gradient (high = full accent).
+     Map My keeps the weekly distribution bars. */
+  .hr-line, .hr-line-head { display: none; }
+  :root[data-theme="health"] .hr-dist { display: none; }
+  :root[data-theme="health"] .hr-line { display: block; margin-top: 8px; }
+  :root[data-theme="health"] .hr-line-head { display: flex; align-items: center; }
+  .more-btn {
+    border: 1.5px solid var(--card-foreground);
+    background: none;
+    color: var(--card-foreground);
+    font: 600 var(--type-sm);
+    padding: 4px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .hr-plot { position: relative; height: 170px; margin: 12px 0 8px; }
+  .hr-plot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .hr-grid-lines line { stroke: var(--border); stroke-width: 1; }
+  .hr-path { fill: none; stroke: url(#hr-grad); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+  .hr-pill {
+    position: absolute;
+    right: 0;
+    transform: translateY(-50%);
+    min-width: 40px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--card);
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    font: 600 var(--type-xs);
+    text-align: center;
+    color: var(--card-foreground);
+  }
+  .hr-x { position: relative; height: 18px; }
+  .hr-x span { position: absolute; transform: translateX(-50%); font: var(--type-xs); color: var(--muted-foreground); }
+  .hr-x span:first-child { transform: none; }
+  .zones { margin-top: 14px; }
+  .zones h3, .easy h3 { font: 600 var(--type-xl); letter-spacing: -.01em; }
+  .zone { margin-top: 8px; }
+  .zone .label small { font: var(--type-xs); }
+  .zone-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .zone-row i { height: 23px; border-radius: var(--bar-radius, 4px); width: var(--w); }
+  .zone-row b { font: 600 var(--type-sm); white-space: nowrap; }
+
+  .easy { margin-top: 16px; padding: 0 4px; }
+  .easy-bar { display: flex; height: 26px; border-radius: var(--bar-radius, 4px); overflow: hidden; margin-top: 10px; }
+  .easy-bar i:first-child { flex: 73; background: var(--chart-5); }
+  .easy-bar i:last-child { flex: 27; background: var(--accent); }
+  .easy-legend { display: flex; justify-content: space-between; margin-top: 6px; font: var(--type-sm); color: var(--muted-foreground); }
+  .easy-legend b { color: var(--card-foreground); }
+
+  /* Action rows */
+  .action { display: flex; align-items: center; gap: 12px; padding: 12px var(--card-pad, 16px); }
+  .action h4 { flex: 1; font: 600 var(--type-xl); letter-spacing: -.01em; }
+  .dark-btn {
+    border: 0;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font: 700 var(--type-xs);
+    height: 32px;
+    padding: 0 16px;
+    border-radius: 16px;
+    cursor: pointer;
+  }
+  .action svg { flex: none; }
+
+  @media (max-width: 380px) {
+    .bars, .days { grid-template-columns: repeat(7, 24px); }
+    .value { font: 500 var(--type-2xl); }
+  }
+
+  /* Flavor hooks: tokens a theme can set; the fallbacks keep the base look */
+  .top {
+    background: var(--header-bg, var(--card));
+    -webkit-backdrop-filter: var(--header-blur, none);
+    backdrop-filter: var(--header-blur, none);
+    border-bottom-color: var(--divider, var(--border));
+  }
+  .icon-btn, .pill-btn { background: var(--control-bg, var(--card)); box-shadow: var(--control-shadow, 0 2px 10px rgba(0,0,0,.12)); }
+  /* Primary action: filled with the flavor accent so it reads as the main CTA */
+  .pill-btn { background: var(--accent); color: var(--accent-foreground); box-shadow: none; font-weight: 600; gap: 6px; }
+  .card { background: var(--card-fill, var(--card)); }
+  .sec + .sec { border-top-color: var(--divider, var(--border)); }
+  .sec + .sec { padding-top: var(--sec-join, var(--card-pad, 14px)); }
+  .sec:has(+ .sec) { padding-bottom: var(--sec-join-above, var(--card-pad, 14px)); }
+
+  /* Section order per Map My flavor (spec: default order with no goals set).
+     Red is the Figma reference and keeps its original order. Heart rate is MVP only. */
+  .card[data-section="distance"] { order: var(--order-distance, 0); }
+  .card[data-section="duration"] { order: var(--order-duration, 0); }
+  .card[data-section="workouts"] { order: var(--order-workouts, 0); }
+  .card[data-section="calories"] { order: var(--order-calories, 0); }
+  .card[data-section="steps"] { order: var(--order-steps, 0); }
+  .card[data-section="stairs"] { order: var(--order-stairs, 0); }
+  .card[data-section="heart"] { order: var(--order-heart, 0); display: var(--show-heart, block); }
+  .card[data-section="actions"] { order: 99; }
+  :root[data-flavor="run"], :root[data-flavor="ride"], :root[data-flavor="mvp"] {
+    --order-distance: 1; --order-duration: 2; --order-workouts: 3; --order-calories: 4;
+    --order-steps: 5; --order-stairs: 6; --order-heart: 7;
+  }
+  :root[data-flavor="fitness"] {
+    --order-workouts: 1; --order-duration: 2; --order-calories: 3; --order-distance: 4;
+    --order-steps: 5; --order-stairs: 6; --order-heart: 7;
+  }
+  :root[data-flavor="walk"] {
+    --order-steps: 1; --order-stairs: 2; --order-distance: 3; --order-duration: 4;
+    --order-workouts: 5; --order-calories: 6; --order-heart: 7;
+  }
+  :root[data-flavor="run"], :root[data-flavor="ride"], :root[data-flavor="fitness"], :root[data-flavor="walk"] { --show-heart: none; }
+  .label, .week-label, .progress span, .easy-legend { color: var(--label-color, var(--muted-foreground)); }
+  .value small { font: 500 var(--type-unit, var(--type-base)); }
+  .bar i, .blocks .bar.on { background: var(--fill-chart, var(--chart-1)); }
+  .track i { background: var(--fill-progress, var(--accent)); }
+
+  /* Modern Health: segmented control in place of underlined caps tabs */
+  :root[data-theme="health"] .tabs { gap: 2px; padding: 2px; margin: 16px 0 12px; background: var(--secondary); border-radius: 999px; }
+  :root[data-theme="health"] .tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 0;
+    border: 0;
+    border-radius: 999px;
+    font: 600 var(--type-sm);
+    text-transform: none;
+    letter-spacing: var(--tracking-text, normal);
+    color: var(--card-foreground);
+  }
+  :root[data-theme="health"] .tab.active { background: var(--segment-active); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+  /* Title and number faces come from the active theme (see tokens.css) */
+  .hero h1, .card-title, .zones h3, .easy h3, .action h4 {
+    font-family: var(--font-title, var(--font));
+    font-weight: var(--weight-title, 600);
+    letter-spacing: var(--tracking-title, -.01em);
+  }
+  .hero h1 { font-weight: var(--weight-heading, var(--weight-title, 700)); }
+  .value, .value small {
+    font-family: var(--font-number, var(--font));
+    font-weight: var(--weight-number, 500);
+  }
+  .value { letter-spacing: var(--tracking-number, -.02em); }
+  .value small { font-weight: var(--unit-weight, var(--weight-number, 500)); }
+  .label { font-weight: var(--weight-label, 400); }
+  .label, .week-label, .progress span, .easy-legend { letter-spacing: var(--tracking-text, normal); }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <header class="top">
+    <div class="top-row">
+      <button class="icon-btn" aria-label="Notifications">
+        <svg width="20" height="22" viewBox="0 0 20 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2a6 6 0 0 0-6 6v5l-2 3h16l-2-3V8a6 6 0 0 0-6-6z"/><path d="M7.5 19a2.5 2.5 0 0 0 5 0"/></svg>
+      </button>
+      <a class="pill-btn" href="goal-type.html"><span class="figure cycle" aria-hidden="true"></span><span class="figure run" aria-hidden="true"></span><span class="figure walk" aria-hidden="true"></span><svg class="plus" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Create a Goal</a>
+    </div>
+    <nav class="tabs">
+      <a class="tab active" href="#">Dashboard</a>
+      <a class="tab" href="#">My Plan</a>
+      <a class="tab" href="#">Workouts</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <div class="title-row">
+        <h1>My Performance</h1>
+      </div>
+      <span class="week-label">This week</span>
+    </div>
+    <div class="week">
+      <button aria-label="Previous week"><svg width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 1 2 7l6 6"/></svg></button>
+      <button aria-label="Next week" disabled><svg width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m2 1 6 6-6 6"/></svg></button>
+    </div>
+  </section>
+
+  <main class="cards">
+
+    <!-- Distance -->
+    <article class="card" data-section="distance">
+      <div class="sec">
+        <div class="card-head"><h2 class="card-title">Distance</h2><span class="stamp">6:47 AM »</span></div>
+        <div class="split">
+          <div class="stats">
+            <div><div class="label">Today</div><div class="value">1.21<small>mi</small></div></div>
+            <div><div class="label">Daily Avg.</div><div class="value">3.25<small>mi</small></div></div>
+          </div>
+          <div>
+            <div class="bars"><div class="bar"><i style="--h:100%"></i></div><div class="bar"><i style="--h:59%"></i></div><div class="bar"><i style="--h:35%"></i></div><div class="bar"><i style="--h:52%"></i></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="goal-head">
+          <div>
+            <div class="label"><span class="goal-name ride">Ride Goal</span><span class="goal-name run">Run Goal</span><span class="goal-name walk">Walk Goal</span><span class="goal-name distance">Distance Goal</span></div>
+            <div class="value">36.00<small>/30mi</small></div>
+          </div>
+          <span class="celebrate f-run" aria-hidden="true"><img class="on-light" src="assets/figures/run-celebrate.run.light.svg" alt="" width="113" height="131" loading="lazy"><img class="on-dark" src="assets/figures/run-celebrate.run.dark.svg" alt="" width="113" height="131" loading="lazy"></span>
+          <span class="celebrate f-fitness" aria-hidden="true"><img class="on-light" src="assets/figures/run-celebrate.fitness.light.svg" alt="" width="113" height="131" loading="lazy"><img class="on-dark" src="assets/figures/run-celebrate.fitness.dark.svg" alt="" width="113" height="131" loading="lazy"></span>
+          <span class="celebrate f-mvp" aria-hidden="true"><img class="on-light" src="assets/figures/run-celebrate.mvp.light.svg" alt="" width="113" height="131" loading="lazy"><img class="on-dark" src="assets/figures/run-celebrate.mvp.dark.svg" alt="" width="113" height="131" loading="lazy"></span>
+          <span class="celebrate f-ride" aria-hidden="true"><img class="on-light" src="assets/figures/cycle-celebrate.ride.light.svg" alt="" width="102" height="113" loading="lazy"><img class="on-dark" src="assets/figures/cycle-celebrate.ride.dark.svg" alt="" width="102" height="113" loading="lazy"></span>
+          <span class="celebrate f-red" aria-hidden="true"><img class="on-light" src="assets/figures/cycle-celebrate.red.light.svg" alt="" width="102" height="113" loading="lazy"><img class="on-dark" src="assets/figures/cycle-celebrate.red.dark.svg" alt="" width="102" height="113" loading="lazy"></span>
+          <span class="celebrate f-walk" aria-hidden="true"><img class="on-light" src="assets/figures/walk-celebrate.walk.light.svg" alt="" width="106" height="128" loading="lazy"><img class="on-dark" src="assets/figures/walk-celebrate.walk.dark.svg" alt="" width="106" height="128" loading="lazy"></span>
+        </div>
+        <div class="progress"><div class="track done"><i style="--p:100%"></i></div><span>120%</span></div>
+      </div>
+    </article>
+
+    <!-- Duration -->
+    <article class="card" data-section="duration">
+      <div class="sec">
+        <h2 class="card-title">Duration</h2>
+        <div class="split">
+          <div class="stats">
+            <div><div class="label">Today</div><div class="value">1:30:23</div></div>
+            <div><div class="label">Daily Avg.</div><div class="value">2:30:23</div></div>
+          </div>
+          <div>
+            <div class="bars"><div class="bar"><i style="--h:100%"></i></div><div class="bar"><i style="--h:48%"></i></div><div class="bar"><i style="--h:30%"></i></div><div class="bar"><i style="--h:44%"></i></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Workouts -->
+    <article class="card" data-section="workouts">
+      <div class="sec" style="padding-bottom:12px">
+        <h2 class="card-title">Workouts</h2>
+        <div class="split">
+          <div><div class="label">Total Goal</div><div class="value">3<small>/5</small></div></div>
+          <div class="blocks">
+            <div class="bars"><div class="bar on"></div><div class="bar"></div><div class="bar on">2</div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sec" style="padding-top:12px;padding-bottom:12px">
+        <div class="split" style="margin-top:0">
+          <div><div class="label">Run Goal</div><div class="value">1<small>/5</small></div></div>
+          <div class="blocks">
+            <div class="bars"><div class="bar"></div><div class="bar"></div><div class="bar on"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sec" style="padding-top:12px">
+        <div class="split" style="margin-top:0">
+          <div><div class="label">Walk Goal</div><div class="value">2<small>/5</small></div></div>
+          <div class="blocks">
+            <div class="bars"><div class="bar on"></div><div class="bar"></div><div class="bar on"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Calories -->
+    <article class="card" data-section="calories">
+      <div class="sec">
+        <h2 class="card-title">Calories Burned</h2>
+        <div class="split">
+          <div class="stats">
+            <div><div class="label">Today</div><div class="value">650</div></div>
+            <div><div class="label">Daily Avg.</div><div class="value">1,200</div></div>
+          </div>
+          <div>
+            <div class="bars"><div class="bar"><i style="--h:100%"></i></div><div class="bar"><i style="--h:59%"></i></div><div class="bar"><i style="--h:35%"></i></div><div class="bar"><i style="--h:51%"></i></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="label">Goal</div>
+        <div class="value">6,670<small style="text-transform:none">/12,000Calories</small></div>
+        <div class="progress"><div class="track"><i style="--p:57%"></i></div><span>54%</span></div>
+      </div>
+    </article>
+
+    <!-- Steps -->
+    <article class="card" data-section="steps">
+      <div class="sec">
+        <div class="card-head"><h2 class="card-title">Steps</h2><span class="stamp">6:47 AM »</span></div>
+        <div class="split">
+          <div class="stats">
+            <div><div class="label">Today</div><div class="value">2,712</div></div>
+            <div><div class="label">Daily Avg.</div><div class="value">6,712</div></div>
+          </div>
+          <div>
+            <div class="bars"><div class="bar"><i style="--h:100%"></i></div><div class="bar"><i style="--h:59%"></i></div><div class="bar"><i style="--h:35%"></i></div><div class="bar"><i style="--h:51%"></i></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="label">Goal</div>
+        <div class="value">29,234<small>/40,000steps</small></div>
+        <div class="progress"><div class="track"><i style="--p:14%"></i></div><span>20%</span></div>
+      </div>
+    </article>
+
+    <!-- Stairs -->
+    <article class="card" data-section="stairs">
+      <div class="sec">
+        <h2 class="card-title">Flights of Stairs</h2>
+        <div class="split">
+          <div class="stats">
+            <div><div class="label">Today</div><div class="value">332</div></div>
+            <div><div class="label">Daily Avg.</div><div class="value">400</div></div>
+          </div>
+          <div>
+            <div class="bars"><div class="bar"><i style="--h:100%"></i></div><div class="bar"><i style="--h:59%"></i></div><div class="bar"><i style="--h:35%"></i></div><div class="bar"><i style="--h:51%"></i></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="label">Goal</div>
+        <div class="value">332<small>/1,200flights</small></div>
+        <div class="progress"><div class="track"><i style="--p:14%"></i></div><span>20%</span></div>
+      </div>
+    </article>
+
+    <!-- Heart rate -->
+    <article class="card" data-section="heart">
+      <div class="sec">
+        <h2 class="card-title hr-dist">Weekly Heart Rate Distribution</h2>
+        <div class="hr-chart hr-dist">
+          <div class="hr-grid"><div><span>60</span></div><div><span>30</span></div><div><span>0</span></div></div>
+          <div class="hr-cols">
+            <div class="hr-col"><i style="height:13px;background:var(--chart-2)"></i><i style="height:14px;background:var(--chart-4)"></i><i style="height:35px;background:var(--chart-5)"></i></div>
+            <div class="hr-col"><i style="height:9px;background:var(--accent)"></i><i style="height:8px;background:var(--chart-2)"></i><i style="height:9px;background:var(--chart-3)"></i><i style="height:9px;background:var(--chart-4)"></i><i style="height:20px;background:var(--chart-5)"></i></div>
+            <div class="hr-col"><i style="height:6px;background:var(--accent)"></i><i style="height:8px;background:var(--chart-2)"></i><i style="height:12px;background:var(--chart-3)"></i><i style="height:8px;background:var(--chart-4)"></i><i style="height:33px;background:var(--chart-5)"></i></div>
+            <div></div><div></div><div></div><div></div>
+          </div>
+          <div class="hr-days"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+        </div>
+
+        <div class="card-head hr-line-head">
+          <h2 class="card-title">Heart Rate</h2>
+          <button class="more-btn" type="button">More</button>
+        </div>
+        <div class="hr-line" role="img" aria-label="Heart rate over a 98 minute workout: mostly 75 to 95 BPM, with peaks near 120 BPM around minutes 4 and 38">
+          <div class="hr-plot">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="hr-grad" gradientUnits="userSpaceOnUse" x1="0" y1="32.41" x2="0" y2="54.48">
+                  <stop offset="0" style="stop-color: var(--accent)"/>
+                  <stop offset="1" style="stop-color: var(--hr-line-low)"/>
+                </linearGradient>
+              </defs>
+              <g class="hr-grid-lines"><line x1="0" x2="100" y1="0.0" y2="0.0" vector-effect="non-scaling-stroke"/><line x1="0" x2="100" y1="26.21" y2="26.21" vector-effect="non-scaling-stroke"/><line x1="0" x2="100" y1="52.41" y2="52.41" vector-effect="non-scaling-stroke"/><line x1="0" x2="100" y1="100.0" y2="100.0" vector-effect="non-scaling-stroke"/></g>
+              <path class="hr-path" d="M0.0 59.4 L0.43 59.77 L0.86 56.4 L1.29 56.18 L1.71 54.27 L2.14 44.74 L2.57 36.52 L3.0 35.55 L3.43 37.33 L3.86 36.92 L4.29 38.48 L4.71 39.41 L5.14 38.42 L5.57 37.78 L6.0 43.44 L6.43 48.0 L6.86 48.37 L7.29 43.32 L7.71 40.83 L8.14 41.56 L8.57 39.1 L9.0 41.54 L9.43 39.49 L9.86 44.35 L10.29 53.42 L10.71 62.01 L11.14 65.23 L11.57 62.54 L12.0 63.15 L12.43 61.21 L12.86 59.39 L13.29 59.31 L13.71 58.64 L14.14 60.32 L14.57 60.87 L15.0 60.04 L15.43 56.96 L15.86 55.83 L16.29 55.37 L16.71 53.81 L17.14 53.59 L17.57 53.87 L18.0 51.08 L18.43 49.11 L18.86 49.41 L19.29 47.9 L19.71 47.42 L20.14 46.01 L20.57 46.17 L21.0 48.59 L21.43 47.35 L21.86 50.72 L22.29 51.62 L22.71 50.74 L23.14 52.78 L23.57 52.52 L24.0 54.6 L24.43 53.32 L24.86 52.37 L25.29 52.85 L25.71 51.94 L26.14 53.92 L26.57 53.35 L27.0 53.21 L27.43 52.83 L27.86 52.76 L28.29 50.67 L28.71 48.64 L29.14 49.3 L29.57 48.78 L30.0 51.24 L30.43 51.07 L30.86 52.93 L31.29 53.47 L31.71 54.2 L32.14 43.96 L32.57 32.4 L33.0 42.0 L33.43 54.76 L33.86 56.42 L34.29 62.16 L34.71 67.73 L35.14 70.64 L35.57 67.96 L36.0 69.17 L36.43 69.37 L36.86 68.86 L37.29 66.44 L37.71 68.47 L38.14 68.07 L38.57 67.38 L39.0 65.49 L39.43 64.65 L39.86 63.89 L40.29 65.9 L40.71 66.36 L41.14 66.74 L41.57 64.5 L42.0 62.68 L42.43 65.01 L42.86 66.19 L43.29 66.55 L43.71 66.71 L44.14 65.68 L44.57 64.64 L45.0 65.59 L45.43 67.49 L45.86 66.98 L46.29 67.03 L46.71 66.24 L47.14 64.02 L47.57 61.84 L48.0 58.2 L48.43 53.86 L48.86 51.61 L49.29 54.79 L49.71 54.13 L50.14 55.33 L50.57 56.44 L51.0 57.77 L51.43 60.06 L51.86 60.97 L52.29 62.71 L52.71 61.28 L53.14 62.82 L53.57 63.63 L54.0 63.41 L54.43 63.47 L54.86 62.75 L55.29 63.63 L55.71 64.38 L56.14 64.17 L56.57 64.26 L57.0 63.16 L57.43 63.99 L57.86 60.74 L58.29 59.94 L58.71 61.52 L59.14 62.0 L59.57 61.88 L60.0 61.72 L60.43 62.9 L60.86 60.79 L61.29 59.25 L61.71 60.92 L62.14 61.95 L62.57 64.22 L63.0 65.28 L63.43 64.6 L63.86 64.27 L64.29 61.29 L64.71 62.18 L65.14 63.08 L65.57 59.32 L66.0 58.81 L66.43 60.15 L66.86 59.28 L67.29 61.0 L67.71 59.58 L68.14 56.47 L68.57 54.81 L69.0 54.25 L69.43 55.54 L69.86 55.57 L70.29 56.24 L70.71 53.79 L71.14 53.26 L71.57 51.83 L72.0 53.03 L72.43 54.08 L72.86 51.72 L73.29 49.18 L73.71 47.98 L74.14 47.35 L74.57 47.02 L75.0 47.9 L75.43 51.86 L75.86 54.03 L76.29 56.84 L76.71 60.31 L77.14 62.08 L77.57 61.63 L78.0 61.37 L78.43 59.21 L78.86 56.65 L79.29 57.27 L79.71 55.4 L80.14 53.99 L80.57 53.25 L81.0 55.4 L81.43 57.34 L81.86 57.65 L82.29 56.58 L82.71 55.15 L83.14 52.72 L83.57 52.62 L84.0 53.66" vector-effect="non-scaling-stroke"/>
+            </svg>
+            <span class="hr-pill" style="top: 0.0%">169</span><span class="hr-pill" style="top: 26.21%">131</span><span class="hr-pill" style="top: 52.41%">93</span><span class="hr-pill" style="top: 100.0%">24</span>
+          </div>
+          <div class="hr-x"><span style="left: 0.0%">0'</span><span style="left: 12.86%">15'</span><span style="left: 25.71%">30'</span><span style="left: 38.57%">45'</span><span style="left: 51.43%">60'</span><span style="left: 64.29%">75'</span><span style="left: 77.14%">90'</span></div>
+        </div>
+        <div class="zones">
+          <h3>Heart Rate Zones</h3>
+          <div class="zone">
+            <div class="label">Race Pace <small>(130-140BPM)</small></div>
+            <div class="zone-row"><i style="--w:22px;background:var(--chart-2)"></i><b>3min 13s</b></div>
+          </div>
+          <div class="zone">
+            <div class="label">Tempo <small>(93-131BPM)</small></div>
+            <div class="zone-row"><i style="--w:76px;background:var(--chart-3)"></i><b>12min 13s</b></div>
+          </div>
+          <div class="zone">
+            <div class="label">Endurance <small>(93-131BPM)</small></div>
+            <div class="zone-row"><i style="--w:132px;background:var(--chart-4)"></i><b>24min 13s</b></div>
+          </div>
+          <div class="zone">
+            <div class="label">Active Recovery <small>(&lt; 93BPM)</small></div>
+            <div class="zone-row"><i style="--w:calc(100% - 96px);background:var(--chart-5)"></i><b>1h 34min 13s</b></div>
+          </div>
+        </div>
+
+        <div class="easy">
+          <h3>Easy vs Hard</h3>
+          <div class="easy-bar"><i></i><i></i></div>
+          <div class="easy-legend"><span><b>Easy Zone</b> 1hr 24min</span><span><b>Hard Zone</b> 30min</span></div>
+        </div>
+      </div>
+      <div class="sec action">
+        <svg width="24" height="22" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 21S1 14.5 1 7.2A5.7 5.7 0 0 1 12 4.3a5.7 5.7 0 0 1 11 2.9C23 14.5 12 21 12 21z" style="fill:var(--accent)"/><path d="M3 10h5l2-3 3 6 2-3h6" fill="none" style="stroke:var(--accent-foreground)" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <h4>Edit Heart Rate Zones</h4>
+        <button class="dark-btn">Calibrate</button>
+      </div>
+    </article>
+
+    <article class="card" data-section="actions">
+      <div class="action">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="stroke:var(--accent)"><circle cx="11" cy="13" r="9"/><circle cx="11" cy="13" r="5"/><circle cx="11" cy="13" r="1.2" style="fill:var(--accent)"/><path d="m11 13 9-9M17 3v4h4" style="stroke:var(--card-foreground)"/></svg>
+        <h4>Adjust Weekly Goals</h4>
+        <button class="dark-btn">Manage</button>
+      </div>
+    </article>
+
+    <article class="card" data-section="actions">
+      <div class="action">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10v6a5 5 0 0 1-10 0V3z"/><path d="M7 5H3v2a4 4 0 0 0 4 4M17 5h4v2a4 4 0 0 1-4 4M12 14v4M8 21h8M9 18h6"/><path d="m12 5 .9 1.8 2 .3-1.4 1.4.3 2-1.8-1-1.8 1 .3-2-1.4-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>
+        <h4>Explore Challenges</h4>
+        <button class="dark-btn">Discover</button>
+      </div>
+    </article>
+
+  </main>
+</div>
+</body>
+</html>

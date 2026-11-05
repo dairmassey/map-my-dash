@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Create a Goal · Step Goal</title>
+<link rel="stylesheet" href="tokens.css">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="goal.css">
+</head>
+<body>
+<div class="phone">
+  <div class="sheet">
+    <a class="back" href="goal-measure.html" aria-label="Back"><svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M8 2 2 8l6 6"/></svg></a>
+    <h1>Select a Weekly Step Goal</h1>
+    <p class="sub">Set a goal based on how many steps you take, or how many steps you would like to take.</p>
+    <div class="stepper">
+      <button type="button" id="dec" aria-label="Decrease by 1,000 steps"><svg width="16" height="4" viewBox="0 0 16 4"><rect width="16" height="3.4" rx="1.7" fill="currentColor"/></svg></button>
+      <div class="count">
+        <output id="goal" aria-live="polite">70,000</output>
+        <span>Steps</span>
+      </div>
+      <button type="button" id="inc" aria-label="Increase by 1,000 steps"><svg width="16" height="16" viewBox="0 0 16 16"><rect y="6.3" width="16" height="3.4" rx="1.7" fill="currentColor"/><rect x="6.3" width="3.4" height="16" rx="1.7" fill="currentColor"/></svg></button>
+    </div>
+    <a class="cta" href="goal-start.html">Continue</a>
+  </div>
+</div>
+<script>
+  (() => {
+    const STEP = 1000, MIN = 1000, MAX = 500000;
+    let value = 70000;
+    const out = document.getElementById('goal');
+    const dec = document.getElementById('dec');
+    const inc = document.getElementById('inc');
+    const render = () => {
+      out.textContent = value.toLocaleString('en-US');
+      dec.disabled = value <= MIN;
+      inc.disabled = value >= MAX;
+    };
+    const change = (delta) => {
+      value = Math.min(MAX, Math.max(MIN, value + delta));
+      render();
+    };
+    dec.addEventListener('click', () => change(-STEP));
+    inc.addEventListener('click', () => change(STEP));
+    render();
+  })();
+</script>
+</body>
+</html>
