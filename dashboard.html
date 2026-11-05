@@ -214,33 +214,20 @@
   :root[data-theme="health"] .hr-dist { display: none; }
   :root[data-theme="health"] .hr-line { display: block; margin-top: 8px; }
   :root[data-theme="health"] .hr-line-head { display: flex; align-items: center; }
-  .more-btn {
-    border: 1.5px solid var(--card-foreground);
-    background: none;
-    color: var(--card-foreground);
-    font: 600 var(--type-sm);
-    padding: 4px 14px;
-    border-radius: 999px;
-    cursor: pointer;
-  }
   .hr-plot { position: relative; height: 170px; margin: 12px 0 8px; }
-  .hr-plot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  /* Plot and minute ticks stop short of the right edge; the BPM labels sit in that gutter */
+  .hr-plot svg { display: block; width: calc(100% - 32px); height: 100%; overflow: visible; }
   .hr-grid-lines line { stroke: var(--border); stroke-width: 1; }
   .hr-path { fill: none; stroke: url(#hr-grad); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
   .hr-pill {
     position: absolute;
     right: 0;
     transform: translateY(-50%);
-    min-width: 40px;
-    padding: 2px 10px;
-    border-radius: 999px;
-    background: var(--card);
-    box-shadow: 0 1px 4px rgba(0,0,0,.08);
-    font: 600 var(--type-xs);
-    text-align: center;
-    color: var(--card-foreground);
+    font: var(--type-xs);
+    text-align: right;
+    color: var(--muted-foreground);
   }
-  .hr-x { position: relative; height: 18px; }
+  .hr-x { position: relative; height: 18px; margin-right: 32px; }
   .hr-x span { position: absolute; transform: translateX(-50%); font: var(--type-xs); color: var(--muted-foreground); }
   .hr-x span:first-child { transform: none; }
   .zones { margin-top: 14px; }
@@ -272,6 +259,8 @@
     cursor: pointer;
   }
   .action svg { flex: none; }
+  /* Modern Health joins sections with no gap; the action row under Easy vs Hard needs room */
+  :root[data-theme="health"] .sec + .sec.action { padding-top: 20px; }
 
   @media (max-width: 380px) {
     .bars, .days { grid-template-columns: repeat(7, 24px); }
@@ -549,7 +538,6 @@
 
         <div class="card-head hr-line-head">
           <h2 class="card-title">Heart Rate</h2>
-          <button class="more-btn" type="button">More</button>
         </div>
         <div class="hr-line" role="img" aria-label="Heart rate over a 98 minute workout: mostly 75 to 95 BPM, with peaks near 120 BPM around minutes 4 and 38">
           <div class="hr-plot">
