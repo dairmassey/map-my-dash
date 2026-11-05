@@ -170,7 +170,7 @@
   /* Today sits at the top of the bars and Daily Avg. at their base, so the stats fill the card */
   .stats { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; padding: 2px 0 20px; }
   .label { font: var(--type-sm); color: var(--muted-foreground); }
-  .value { font: 500 var(--type-3xl); letter-spacing: -.02em; }
+  .value { font: 500 var(--type-value, var(--type-3xl)); letter-spacing: -.02em; }
   .value small { font: 500 var(--type-base); text-transform: var(--unit-case, uppercase); color: var(--unit-color, inherit); letter-spacing: 0; }
 
   /* Weekly bar chart */
