@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map My Dash Compare</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font: var(--type-base);
+    color: var(--foreground);
+    background: var(--background);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 32px 0;
+  }
+  header h1 { font: 700 var(--type-2xl); letter-spacing: -.01em; }
+  .controls { display: flex; align-items: center; gap: 12px; }
+
+  /* Flavor dropdown, with the current flavor's color as a dot */
+  .pick { position: relative; display: flex; align-items: center; }
+  .pick i { position: absolute; left: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--dot); pointer-events: none; }
+  .controls select, .slot select {
+    font: 600 var(--type-sm);
+    color: var(--card-foreground);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 30px 8px 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='m1 1 4 4 4-4' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+  .pick select { padding-left: 32px; }
+
+  /* Light / dark segmented control */
+  .seg { display: flex; gap: 2px; padding: 3px; background: var(--secondary); border-radius: 999px; }
+  .seg button {
+    border: 0;
+    background: none;
+    color: var(--foreground);
+    font: 600 var(--type-sm);
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .seg button[aria-checked="true"] { background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .seg button:focus-visible, .controls select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  :root { --phone-gap: 80px; }
+  .stage {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--phone-gap);
+    /* Bottom room so the phone shadows aren't cut off at the end of the page */
+    padding: 24px 16px 96px;
+  }
+  .slot { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  /* Name, screen picker and description sit under each phone */
+  .slot-meta { width: calc(450px * var(--s, 1)); }
+  .slot h2 { font: 600 var(--type-lg); letter-spacing: -.01em; white-space: nowrap; }
+  .slot p { font: var(--type-sm); color: var(--muted-foreground); margin-top: 6px; }
+  .slot-meta select { margin-top: 12px; }
+  /* Phone frame is laid out at device size, then scaled to fit */
+  .device {
+    width: calc(450px * var(--s, 1));
+    height: calc(952px * var(--s, 1));
+  }
+  .bezel {
+    width: 450px;
+    height: 952px;
+    padding: 10px;
+    border-radius: 56px;
+    background: var(--n-1000);
+    box-shadow: 0 0 0 1px var(--bezel-ring, transparent), 0 20px 50px rgba(0,0,0,.25);
+    transform: scale(var(--s, 1));
+    transform-origin: top left;
+  }
+  .bezel iframe {
+    display: block;
+    width: 430px;
+    height: 932px;
+    border: 0;
+    border-radius: 46px;
+    background: var(--background);
+  }
+  /* Black bezels vanish on the dark page; a thin ring keeps the phone edge visible */
+  :root[data-scheme="dark"] { --bezel-ring: var(--n-700); }
+  @media (max-width: 640px) {
+    header { padding: 20px 16px 0; flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Map My Dash</h1>
+  <div class="controls">
+    <label class="pick"><i id="flavor-dot"></i><select id="flavor" aria-label="Map My flavor"></select></label>
+    <div class="seg" id="scheme" role="radiogroup" aria-label="Appearance"></div>
+  </div>
+</header>
+<main class="stage" id="stage"></main>
+
+<script>
+  (() => {
+    // Only these files can load in a frame; anything else in the URL is ignored
+    const SCREENS = [
+      ['index', 'Dashboard'],
+      ['goal-type', 'Goal 1 · Type'],
+      ['goal-measure', 'Goal 2 · Measure'],
+      ['goal-steps', 'Goal 3 · Step goal'],
+      ['goal-start', 'Goal 4 · Start week'],
+    ];
+    // The original phone shows screenshots of the app as it actually looked
+    const CURRENT_SCREENS = [
+      ['dashboard', 'Dashboard'],
+      ['goals-intro', 'Goals intro'],
+      ['create-goal', 'Create goal'],
+      ['weekly-goals', "This week's goals"],
+    ];
+    // One phone per approach; theme names must match theme.js. The original is static screenshots.
+    const STYLES = [
+      { original: true, screens: CURRENT_SCREENS, name: 'Original', about: 'The app as it actually looked: all-caps condensed headings, flat grey panels, one red, no dark mode.' },
+      { theme: 'mapmy', name: 'Map My Fonts', about: 'Modernized components (clearer graphs, design tokens, dark mode) still dressed in classic Map My styling.' },
+      { theme: 'health', name: 'Modern Health', about: 'The same modern components with a fully modern look: Apple-style type, color, spacing and depth.' },
+    ];
+    // Map My flavors from the Figma "Themes" table; ids must match theme.js, colors match tokens.css
+    const FLAVORS = [
+      { id: 'run', name: 'Map My Run', color: '#019DEA' },
+      { id: 'fitness', name: 'Map My Fitness', color: '#0D4C8B' },
+      { id: 'ride', name: 'Map My Ride', color: '#FF1700' },
+      { id: 'walk', name: 'Map My Walk', color: '#C314B6' },
+      { id: 'mvp', name: 'MVP', color: '#FF5900' },
+      { id: 'red', name: 'Red', color: '#DC0019' },
+    ];
+    const SCHEMES = [['light', 'Light'], ['dark', 'Dark']];
+
+    // URL state: #flavor=run&scheme=dark&screens=index,goal-type
+    const params = new URLSearchParams(location.hash.slice(1));
+    let flavor = FLAVORS.find((f) => f.id === params.get('flavor')) || FLAVORS.find((f) => f.id === 'red');
+    let scheme = SCHEMES.some(([id]) => id === params.get('scheme')) ? params.get('scheme') : 'light';
+    const screensFor = (i) => STYLES[i].screens || SCREENS;
+    const allowedFor = (i) => new Set(screensFor(i).map(([id]) => id));
+    const fromHash = (params.get('screens') || '').split(',');
+    // Each phone starts on its dashboard unless the URL names an allowed screen for that phone
+    const picks = STYLES.map((_, i) => (allowedFor(i).has(fromHash[i]) ? fromHash[i] : screensFor(i)[0][0]));
+
+    const srcFor = (id, i) => {
+      if (STYLES[i].original) return `original.html?screen=${id}`;
+      const q = new URLSearchParams({ flavor: flavor.id, scheme, theme: STYLES[i].theme });
+      return `${id}.html?${q}`;
+    };
+    const frames = [];
+    const reloadFrames = () => frames.forEach((frame, i) => { frame.src = srcFor(picks[i], i); });
+    const save = () => {
+      const q = new URLSearchParams({ flavor: flavor.id, scheme, screens: picks.join(',') });
+      history.replaceState(null, '', `#${q.toString().replace(/%2C/g, ',')}`);
+    };
+
+    // Flavor dropdown
+    const flavorSelect = document.getElementById('flavor');
+    const flavorDot = document.getElementById('flavor-dot');
+    for (const f of FLAVORS) {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.name;
+      flavorSelect.append(opt);
+    }
+    flavorSelect.value = flavor.id;
+    flavorDot.style.setProperty('--dot', flavor.color);
+    flavorSelect.addEventListener('change', () => {
+      const next = FLAVORS.find((f) => f.id === flavorSelect.value);
+      if (!next) return;
+      flavor = next;
+      flavorDot.style.setProperty('--dot', flavor.color);
+      reloadFrames();
+      save();
+    });
+
+    // Light / dark: applies to this page and every phone
+    const schemeGroup = document.getElementById('scheme');
+    document.documentElement.dataset.scheme = scheme;
+    const schemeButtons = SCHEMES.map(([id, label]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('role', 'radio');
+      btn.textContent = label;
+      btn.setAttribute('aria-checked', String(id === scheme));
+      btn.addEventListener('click', () => {
+        scheme = id;
+        document.documentElement.dataset.scheme = scheme;
+        schemeButtons.forEach((b, j) => b.setAttribute('aria-checked', String(SCHEMES[j][0] === scheme)));
+        reloadFrames();
+        save();
+      });
+      schemeGroup.append(btn);
+      return btn;
+    });
+
+    const stage = document.getElementById('stage');
+    picks.forEach((id, i) => {
+      const slot = document.createElement('section');
+      slot.className = 'slot';
+
+      const heading = document.createElement('h2');
+      heading.textContent = STYLES[i].name;
+      const about = document.createElement('p');
+      about.textContent = STYLES[i].about;
+
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', `${STYLES[i].name} screen`);
+      for (const [value, label] of screensFor(i)) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = label;
+        select.append(opt);
+      }
+      select.value = id;
+
+      const device = document.createElement('div');
+      device.className = 'device';
+      const bezel = document.createElement('div');
+      bezel.className = 'bezel';
+      const frame = document.createElement('iframe');
+      frame.title = STYLES[i].name;
+      frame.src = srcFor(id, i);
+      frames.push(frame);
+      bezel.append(frame);
+      device.append(bezel);
+
+      select.addEventListener('change', () => {
+        if (!allowedFor(i).has(select.value)) return;
+        picks[i] = select.value;
+        frame.src = srcFor(select.value, i);
+        save();
+      });
+
+      const meta = document.createElement('div');
+      meta.className = 'slot-meta';
+      meta.append(heading, about, select);
+      slot.append(device, meta);
+      stage.append(slot);
+    });
+
+    // Fit all phones across on desktop (one per row on narrow screens),
+    // leaving room under them for the name and description
+    const META_ROOM = 190;
+    const fit = () => {
+      const cols = window.innerWidth >= 1000 ? STYLES.length : 1;
+      const top = document.querySelector('.device').getBoundingClientRect().top + window.scrollY;
+      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--phone-gap'));
+      const byWidth = (window.innerWidth - 32 - gap * (cols - 1)) / (450 * cols);
+      const byHeight = (window.innerHeight - top - META_ROOM) / 952;
+      const s = Math.max(0.3, Math.min(1, byWidth, cols > 1 ? byHeight : 1));
+      document.documentElement.style.setProperty('--s', s.toFixed(3));
+    };
+    window.addEventListener('resize', fit);
+    fit();
+  })();
+</script>
+</body>
+</html>
