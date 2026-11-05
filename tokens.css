@@ -169,6 +169,9 @@
 
   --radius: 28px;
   --card-pad: 16px;
+  /* Pill rows need more inset than square ones so text clears the curve */
+  --sheet-pad: 20px;
+  --option-pad: 24px;
   --sec-join: 0px;
   --sec-join-above: 6px;
   --bar-radius: 999px;
