@@ -358,10 +358,9 @@
     letter-spacing: var(--tracking-title, -.01em);
   }
   .hero h1 { font-weight: var(--weight-heading, var(--weight-title, 700)); }
-  /* Scoped version: the headline is SF Pro Bold above the type scale (largest token is 28px), matching the
-     Weekly Goals titles; card titles stay condensed and larger. */
-  /* Tracking from apple.com's 32px SF Pro Display headline: 32/36 at +0.004em */
-  :root[data-version="scoped"] .hero h1 { font: 700 32px/36px var(--font); letter-spacing: .004em; font-kerning: normal; }
+  /* Scoped version: the headline is SF Pro Bold at the top of the type scale (28px); card titles stay condensed and larger. */
+  /* Tracking from apple.com's 28px SF Pro Display headline: 28/32 at +0.007em */
+  :root[data-version="scoped"] .hero h1 { font: 700 28px/32px var(--font); letter-spacing: .007em; font-kerning: normal; }
   :root[data-version="scoped"] :is(.card-title, .zones h3, .easy h3) { font-size: 24px; line-height: 28px; letter-spacing: .01em; font-kerning: normal; }
   /* With the taller titles the time stamp pins to the card's top right instead of the title baseline */
   :root[data-version="scoped"] .card-head { align-items: flex-start; }
