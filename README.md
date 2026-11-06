@@ -6,7 +6,7 @@ Side-by-side prototype of the Map My dashboard and Create a Goal flow:
 - **Map My Fonts**: modernized components (clearer graphs, design tokens, dark mode) in classic Map My styling.
 - **Modern Health**: the same components with a fully modern look.
 
-Open `index.html` for the comparison. The flavor dropdown (Run, Fitness, Ride, Walk, MVP, Red) and the Light/Dark switch apply to every phone.
+Open `index.html` for the three-way comparison, or `scoped.html` for the scoped version: Original next to Map My Fonts with the activity figures and the completed-goal shimmer. The flavor dropdown (Run, Fitness, Ride, Walk, MVP, Red) and the Light/Dark switch apply to every phone.
 
 Static HTML, CSS and a little JavaScript; no build step. Barlow Condensed loads from Google Fonts.
 Activity figures from Activity UI by Dair.

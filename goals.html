@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weekly Goals</title>
+<link rel="stylesheet" href="tokens.css">
+<script src="theme.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font: var(--type-base);
+    color: var(--foreground);
+    background: var(--background);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  .phone { max-width: 430px; margin: 0 auto; min-height: 100vh; padding: 16px 16px 28px; }
+
+  .top-row { display: flex; justify-content: space-between; align-items: center; }
+  .icon-btn, .pill-btn {
+    height: 48px;
+    border: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--control-shadow, 0 2px 10px rgba(0,0,0,.12));
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .icon-btn { width: 48px; border-radius: 50%; background: var(--control-bg, var(--card)); color: var(--foreground); }
+  /* Primary action: filled with the flavor accent, as on the dashboard */
+  .pill-btn { gap: 6px; padding: 0 16px; border-radius: 24px; background: var(--accent); color: var(--accent-foreground); box-shadow: none; font: 600 var(--type-base); }
+
+  /* Modern Health, or the scoped version: the flavor's moving figure replaces the plus
+     (luminance mask of the white-on-black file, in the button's text color) */
+  .figure { display: none; height: 24px; aspect-ratio: var(--ar); background: currentColor; mask: var(--src) center / contain no-repeat; mask-mode: luminance; }
+  .figure.run { --ar: 85 / 97; --src: url(assets/figures/run.dark.svg); }
+  .figure.cycle { --ar: 91 / 78; --src: url(assets/figures/cycle.dark.svg); }
+  .figure.walk { --ar: 54 / 98; --src: url(assets/figures/walk.dark.svg); }
+  :root:is([data-theme="health"], [data-version="scoped"]) .pill-btn .plus { display: none; }
+  :root:is([data-theme="health"], [data-version="scoped"]) .pill-btn .figure.cycle { display: block; }
+  :root:is([data-theme="health"], [data-version="scoped"]):is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"], [data-flavor="walk"]) .pill-btn .figure.cycle { display: none; }
+  :root:is([data-theme="health"], [data-version="scoped"]):is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"]) .pill-btn .figure.run { display: block; }
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="walk"] .pill-btn .figure.walk { display: block; }
+
+  /* Title sits inside the screen gutter so it doesn't hug the edge */
+  .title { padding: 24px 8px 20px; }
+  .title h1 {
+    font: var(--type-3xl);
+    font-family: var(--font-title, var(--font));
+    font-weight: var(--weight-heading, var(--weight-title, 700));
+    letter-spacing: var(--tracking-title, -.01em);
+  }
+  /* Scoped version: SF Pro Bold at the My Performance size, tracked in slightly as SF is at display sizes */
+  /* Tracking from apple.com's 32px SF Pro Display headline: 32/36 at +0.004em */
+  :root[data-version="scoped"] .title h1 { font: 700 32px/36px var(--font); letter-spacing: .004em; font-kerning: normal; }
+
+  .goals { display: flex; flex-direction: column; gap: 12px; }
+  /* Less top padding: the title's line height already adds space above the letters */
+  .card { position: relative; padding: 14px 20px 20px; background: var(--card-fill, var(--card)); color: var(--card-foreground); border-radius: var(--radius); }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .card-title {
+    font: var(--type-xl);
+    font-family: var(--font-title, var(--font));
+    font-weight: var(--weight-title, 600);
+    letter-spacing: var(--tracking-title, -.01em);
+  }
+  :root[data-version="scoped"] .card-title { font-size: 24px; line-height: 28px; letter-spacing: .01em; font-kerning: normal; }
+  /* The title link covers the whole card; the star sits above it */
+  .card-title a { color: inherit; text-decoration: none; }
+  .card-title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  .card-title a:focus-visible { outline: none; }
+  .card:has(.card-title a:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .star {
+    position: relative;
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    margin: -4px -6px 0 0;
+    border: 0;
+    background: none;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .star[aria-pressed="true"] { color: var(--accent); }
+  .star:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 50%; }
+
+  .value {
+    font: var(--type-value, var(--type-3xl));
+    font-family: var(--font-number, var(--font));
+    font-weight: var(--weight-number, 500);
+    letter-spacing: var(--tracking-number, -.02em);
+    margin-top: 10px;
+  }
+  /* Units use the number face too, so the value reads as one font */
+  .value small { font: var(--type-unit, var(--type-base)); font-family: var(--font-number, var(--font)); font-weight: var(--unit-weight, var(--weight-number, 500)); text-transform: var(--unit-case, uppercase); color: var(--unit-color, inherit); letter-spacing: 0; }
+  /* Scoped version: bigger goal numbers now that the goal name is the card title */
+  :root[data-version="scoped"] .value { font-size: 36px; line-height: 40px; }
+  :root[data-version="scoped"] .value small { font-size: 18px; }
+
+  .progress { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .track { flex: 1; height: 10px; background: var(--secondary); border-radius: 5px; overflow: hidden; }
+  .track i { display: block; height: 100%; width: var(--p); background: var(--fill-progress, var(--accent)); border-radius: 5px; }
+  .progress span { font: var(--type-sm); color: var(--label-color, var(--muted-foreground)); min-width: 38px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="top-row">
+    <a class="icon-btn" href="dashboard.html" aria-label="Back"><svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 2 8l6 6"/></svg></a>
+    <a class="pill-btn" href="goal-type.html"><span class="figure cycle" aria-hidden="true"></span><span class="figure run" aria-hidden="true"></span><span class="figure walk" aria-hidden="true"></span><svg class="plus" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Create a Goal</a>
+  </div>
+
+  <div class="title">
+    <h1>Weekly Goals</h1>
+  </div>
+
+  <div class="goals">
+    <article class="card">
+      <div class="card-head">
+        <h2 class="card-title"><a href="goal-detail.html">Weekly Step Goal</a></h2>
+        <button class="star" type="button" aria-pressed="false" aria-label="Favorite step goal"><svg width="20" height="19" viewBox="0 0 20 19" aria-hidden="true"><path d="m10 1 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L10 14.8l-5.4 2.9 1.1-6.1L1.2 7.4l6.1-.8z" fill="currentColor"/></svg></button>
+      </div>
+      <div class="value">23,479<small>/70,000 steps</small></div>
+      <!-- 23,479 of 70,000 = 34% -->
+      <div class="progress"><div class="track"><i style="--p:34%"></i></div><span>34%</span></div>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <h2 class="card-title">Weekly Distance Goal</h2>
+        <button class="star" type="button" aria-pressed="true" aria-label="Favorite distance goal"><svg width="20" height="19" viewBox="0 0 20 19" aria-hidden="true"><path d="m10 1 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L10 14.8l-5.4 2.9 1.1-6.1L1.2 7.4l6.1-.8z" fill="currentColor"/></svg></button>
+      </div>
+      <div class="value">2<small>/12 miles</small></div>
+      <!-- 2 of 12 = 17% -->
+      <div class="progress"><div class="track"><i style="--p:17%"></i></div><span>17%</span></div>
+    </article>
+  </div>
+</div>
+<script>
+  // Stars toggle a favorite goal (prototype only; nothing is saved)
+  for (const star of document.querySelectorAll('.star')) {
+    star.addEventListener('click', () => {
+      star.setAttribute('aria-pressed', String(star.getAttribute('aria-pressed') !== 'true'));
+    });
+  }
+</script>
+</body>
+</html>

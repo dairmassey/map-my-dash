@@ -1,4 +1,5 @@
-// Applies a type style (?theme=), Map My flavor (?flavor=) and light/dark (?scheme=), and keeps them on in-app links
+// Applies a type style (?theme=), Map My flavor (?flavor=), light/dark (?scheme=) and the scoped version (?version=scoped),
+// and keeps them on in-app links
 (() => {
   const THEMES = new Set(['mapmy', 'health']);
   const FLAVORS = new Set(['run', 'fitness', 'ride', 'walk', 'mvp', 'red']);
@@ -13,7 +14,7 @@
     if (theme === 'mapmy') {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&display=swap';
+      link.href = 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&display=swap';
       document.head.append(link);
     }
   }
@@ -29,6 +30,12 @@
   if (SCHEMES.has(scheme)) {
     document.documentElement.dataset.scheme = scheme;
     keep.scheme = scheme;
+  }
+
+  // Scoped version: Map My Fonts plus the activity figures, goal shimmer and larger titles
+  if (params.get('version') === 'scoped') {
+    document.documentElement.dataset.version = 'scoped';
+    keep.version = 'scoped';
   }
 
   if (!Object.keys(keep).length) return;

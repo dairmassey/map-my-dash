@@ -14,6 +14,8 @@
     color: var(--foreground);
     background: var(--n-800);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   .phone {
     max-width: 430px;
@@ -89,7 +91,7 @@
   :root[data-flavor="walk"] .goal-name.walk { display: inline; }
   :root[data-flavor="fitness"] .goal-name.distance { display: inline; }
 
-  /* Modern Health: the flavor's figures (runner covers flavors without their own).
+  /* Modern Health, or the scoped version: the flavor's figures (runner covers flavors without their own).
      The moving figure in Create a Goal is a luminance mask of the white-on-black file, so it's smooth,
      boxless and takes the button's text color. */
   .figure {
@@ -116,23 +118,23 @@
   :root[data-scheme="dark"] .celebrate .on-light { display: none; }
   :root[data-scheme="dark"] .celebrate .on-dark { display: block; }
 
-  :root[data-theme="health"] .pill-btn .plus { display: none; }
-  :root[data-theme="health"] .pill-btn .figure.cycle { display: block; }
-  :root[data-theme="health"]:is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"], [data-flavor="walk"]) .pill-btn .figure.cycle { display: none; }
-  :root[data-theme="health"]:is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"]) .pill-btn .figure.run { display: block; }
-  :root[data-theme="health"][data-flavor="walk"] .pill-btn .figure.walk { display: block; }
+  :root:is([data-theme="health"], [data-version="scoped"]) .pill-btn .plus { display: none; }
+  :root:is([data-theme="health"], [data-version="scoped"]) .pill-btn .figure.cycle { display: block; }
+  :root:is([data-theme="health"], [data-version="scoped"]):is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"], [data-flavor="walk"]) .pill-btn .figure.cycle { display: none; }
+  :root:is([data-theme="health"], [data-version="scoped"]):is([data-flavor="run"], [data-flavor="mvp"], [data-flavor="fitness"]) .pill-btn .figure.run { display: block; }
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="walk"] .pill-btn .figure.walk { display: block; }
   /* One celebration per flavor, with confetti recolored to that flavor's accent; red is the default */
-  :root[data-theme="health"]:not([data-flavor]) .celebrate.f-red,
-  :root[data-theme="health"][data-flavor="red"] .celebrate.f-red,
-  :root[data-theme="health"][data-flavor="run"] .celebrate.f-run,
-  :root[data-theme="health"][data-flavor="fitness"] .celebrate.f-fitness,
-  :root[data-theme="health"][data-flavor="mvp"] .celebrate.f-mvp,
-  :root[data-theme="health"][data-flavor="ride"] .celebrate.f-ride,
-  :root[data-theme="health"][data-flavor="walk"] .celebrate.f-walk { display: block; }
+  :root:is([data-theme="health"], [data-version="scoped"]):not([data-flavor]) .celebrate.f-red,
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="red"] .celebrate.f-red,
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="run"] .celebrate.f-run,
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="fitness"] .celebrate.f-fitness,
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="mvp"] .celebrate.f-mvp,
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="ride"] .celebrate.f-ride,
+  :root:is([data-theme="health"], [data-version="scoped"])[data-flavor="walk"] .celebrate.f-walk { display: block; }
 
-  /* Exceeded goal: the full bar gets a moving sheen (Modern Health only; off with reduced motion) */
+  /* Exceeded goal: the full bar gets a moving sheen (Modern Health and the scoped version; off with reduced motion) */
   .track.done i { position: relative; overflow: hidden; }
-  :root[data-theme="health"] .track.done i::after {
+  :root:is([data-theme="health"], [data-version="scoped"]) .track.done i::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -142,7 +144,7 @@
   }
   @keyframes shimmer { to { transform: translateX(100%); } }
   @media (prefers-reduced-motion: reduce) {
-    :root[data-theme="health"] .track.done i::after { display: none; }
+    :root:is([data-theme="health"], [data-version="scoped"]) .track.done i::after { display: none; }
   }
 
   .week button {
@@ -186,6 +188,7 @@
   .bar i { display: block; width: 100%; height: var(--h, 0%); background: var(--chart-1); border-radius: calc(var(--radius) / 2); }
   .days { display: grid; grid-template-columns: repeat(7, 30px); column-gap: 4px; margin-top: 4px; }
   .days span { font: var(--type-2xs); font-weight: var(--weight-days, 400); color: var(--muted-foreground); text-align: center; }
+  :root[data-version="scoped"] .days span { font: var(--type-xs); font-weight: var(--weight-days, 400); }
 
   /* Workout day blocks */
   .blocks .bar { height: 38px; }
@@ -257,8 +260,31 @@
     padding: 0 16px;
     border-radius: 16px;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
   }
   .action svg { flex: none; }
+  /* Scoped version: the row's action is grey text with a chevron instead of a dark pill,
+     and the whole row is the tap target */
+  :root[data-version="scoped"] .action { position: relative; }
+  :root[data-version="scoped"] .dark-btn {
+    height: auto;
+    padding: 0;
+    gap: 10px;
+    background: none;
+    color: var(--muted-foreground);
+    font: var(--type-base);
+    letter-spacing: var(--tracking-text, normal);
+  }
+  :root[data-version="scoped"] .dark-btn::before { content: ""; position: absolute; inset: 0; }
+  :root[data-version="scoped"] .dark-btn::after {
+    content: "";
+    width: 8px;
+    height: 14px;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='14' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
   /* Modern Health joins sections with no gap; the action row under Easy vs Hard needs room */
   :root[data-theme="health"] .sec + .sec.action { padding-top: 20px; }
 
@@ -332,6 +358,13 @@
     letter-spacing: var(--tracking-title, -.01em);
   }
   .hero h1 { font-weight: var(--weight-heading, var(--weight-title, 700)); }
+  /* Scoped version: the headline is SF Pro Bold above the type scale (largest token is 28px), matching the
+     Weekly Goals titles; card titles stay condensed and larger. */
+  /* Tracking from apple.com's 32px SF Pro Display headline: 32/36 at +0.004em */
+  :root[data-version="scoped"] .hero h1 { font: 700 32px/36px var(--font); letter-spacing: .004em; font-kerning: normal; }
+  :root[data-version="scoped"] :is(.card-title, .zones h3, .easy h3) { font-size: 24px; line-height: 28px; letter-spacing: .01em; font-kerning: normal; }
+  /* With the taller titles the time stamp pins to the card's top right instead of the title baseline */
+  :root[data-version="scoped"] .card-head { align-items: flex-start; }
   .value, .value small {
     font-family: var(--font-number, var(--font));
     font-weight: var(--weight-number, 500);
@@ -592,7 +625,7 @@
       <div class="action">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="stroke:var(--accent)"><circle cx="11" cy="13" r="9"/><circle cx="11" cy="13" r="5"/><circle cx="11" cy="13" r="1.2" style="fill:var(--accent)"/><path d="m11 13 9-9M17 3v4h4" style="stroke:var(--card-foreground)"/></svg>
         <h4>Adjust Weekly Goals</h4>
-        <button class="dark-btn">Manage</button>
+        <a class="dark-btn" href="goals.html">Manage</a>
       </div>
     </article>
 

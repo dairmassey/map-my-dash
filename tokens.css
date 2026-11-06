@@ -114,6 +114,15 @@
   --tracking-number: 0;
 }
 
+/* Scoped version of Map My Fonts: no flat black. Filled controls (Continue, selected options) use
+   n-900 #1A1A1A, the same near-black as the text; in dark they stay white with #1A1A1A text. */
+/* Numbers in Barlow Condensed SemiBold rather than Bold */
+:root[data-theme="mapmy"][data-version="scoped"] { --primary: var(--n-900); --weight-number: 600; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="mapmy"][data-version="scoped"]:not([data-scheme="light"]) { --primary: var(--n-0); --primary-foreground: var(--n-900); }
+}
+:root[data-theme="mapmy"][data-version="scoped"][data-scheme="dark"] { --primary: var(--n-0); --primary-foreground: var(--n-900); }
+
 /* Variant: Modern Health. Modeled on apple.com/health at phone width: one family, one weight (600),
    14px copy, near-black labels with grey kept for units and metadata, no borders or shadows,
    a blurred sticky header, and light-to-accent gradient fills.

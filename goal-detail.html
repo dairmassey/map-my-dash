@@ -14,6 +14,8 @@
     color: var(--foreground);
     background: var(--background);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   .phone { max-width: 430px; margin: 0 auto; min-height: 100vh; padding: 16px 16px 28px; }
 
@@ -39,10 +41,14 @@
     font-weight: var(--weight-heading, var(--weight-title, 700));
     letter-spacing: var(--tracking-title, -.01em);
   }
+  /* Scoped version: SF Pro Bold at the My Performance size, tracked in slightly as SF is at display sizes */
+  /* Tracking from apple.com's 32px SF Pro Display headline: 32/36 at +0.004em */
+  :root[data-version="scoped"] .title h1 { font: 700 32px/36px var(--font); letter-spacing: .004em; font-kerning: normal; }
   .title p { font: var(--type-base); font-weight: var(--weight-label, 400); letter-spacing: var(--tracking-text, normal); color: var(--muted-foreground); margin-top: 2px; }
 
   .card { background: var(--card-fill, var(--card)); color: var(--card-foreground); border-radius: var(--radius); overflow: hidden; }
-  .sec { padding: 20px; }
+  /* Less top padding: the title's line height already adds space above the letters */
+  .sec { padding: 14px 20px 20px; }
   .card-head { display: flex; justify-content: space-between; align-items: baseline; }
   .card-title {
     font: var(--type-xl);
@@ -50,6 +56,8 @@
     font-weight: var(--weight-title, 600);
     letter-spacing: var(--tracking-title, -.01em);
   }
+  :root[data-version="scoped"] .card-title { font-size: 24px; line-height: 28px; letter-spacing: .01em; font-kerning: normal; }
+  :root[data-version="scoped"] .card-head { align-items: flex-start; }
   .stamp { font: var(--type-xs); color: var(--muted-foreground); }
   .label { font: var(--type-sm); font-weight: var(--weight-label, 400); letter-spacing: var(--tracking-text, normal); color: var(--label-color, var(--muted-foreground)); margin-top: 14px; }
   .value {
@@ -59,14 +67,15 @@
     letter-spacing: var(--tracking-number, -.02em);
     margin-top: 2px;
   }
-  .value small { font: var(--type-unit, var(--type-base)); font-weight: var(--unit-weight, var(--weight-number, 500)); color: var(--unit-color, inherit); letter-spacing: 0; }
+  /* Units use the number face too, so the value reads as one font */
+  .value small { font: var(--type-unit, var(--type-base)); font-family: var(--font-number, var(--font)); font-weight: var(--unit-weight, var(--weight-number, 500)); color: var(--unit-color, inherit); letter-spacing: 0; }
 
   .progress { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
   .track { flex: 1; height: 10px; background: var(--secondary); border-radius: 5px; overflow: hidden; }
   .track i { display: block; height: 100%; width: var(--p); background: var(--fill-progress, var(--accent)); border-radius: 5px; }
   .progress span { font: var(--type-sm); color: var(--label-color, var(--muted-foreground)); min-width: 38px; text-align: right; }
 
-  /* Modern Health: the walking figure beside the goal, drawn as a luminance mask of the
+  /* Modern Health, or the scoped version: the walking figure beside the goal, drawn as a luminance mask of the
      white-on-black file so it's smooth, boxless and in the text color */
   .goal-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
   .walker {
@@ -79,7 +88,7 @@
     mask: url(assets/figures/walk.dark.svg) center / contain no-repeat;
     mask-mode: luminance;
   }
-  :root[data-theme="health"] .walker { display: block; }
+  :root:is([data-theme="health"], [data-version="scoped"]) .walker { display: block; }
 
   /* Stat rows */
   .rows { list-style: none; }
@@ -103,7 +112,7 @@
 <body>
 <div class="phone">
   <div class="top-row">
-    <a class="icon-btn" href="dashboard.html" aria-label="Back"><svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 2 8l6 6"/></svg></a>
+    <a class="icon-btn" href="goals.html" aria-label="Back"><svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 2 8l6 6"/></svg></a>
     <button class="icon-btn" type="button" aria-label="More options"><svg width="18" height="4" viewBox="0 0 18 4" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="9" cy="2" r="2"/><circle cx="16" cy="2" r="2"/></svg></button>
   </div>
 
